@@ -23,7 +23,7 @@ Use the same configuration contract as the main paper-note workflow:
 - `PAPER_NOTES_ARCHIVE_ROOT`
 - `PAPER_NOTES_STAGING_ROOT`
 
-The clean-note standard is defined in `skill/references/clean-note-format.md`.
+The clean-note standard is defined in `skills/evidence-grounded-paper-notes-zh/references/clean-note-format.md`.
 
 ## When To Use
 
