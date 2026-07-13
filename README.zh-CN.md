@@ -27,6 +27,8 @@
 1. 后端证据层：MinerU 抽取、图表清单、裁图、证据卡、严格报告
 2. 前端笔记层：Obsidian 中干净可读的 14 节中文论文笔记
 
+它还包含 topic 级别的 companion Skills：专题归档、全景综述、学术综述、工程综述和持续维护。
+
 公开版已经做过脱敏：本机路径、私有 vault 名称、内网服务地址都替换成环境变量和示例配置。
 
 ## 1. 功能
@@ -37,6 +39,7 @@
 - 校验中文 Obsidian 正式笔记是否满足固定 14 节结构
 - 记录已读标记和阅读索引
 - 把临时阅读 inbox 和长期 topic archive 分开维护
+- 维护 topic 级全景综述、学术综述和工程综述
 
 ## 2. 仓库结构
 
@@ -45,6 +48,11 @@
 ├── skill/
 │   ├── SKILL.md
 │   └── references/
+├── skills/
+│   ├── paper-knowledge-family-zh/
+│   ├── paper-topic-archive-zh/
+│   ├── paper-topic-survey-zh/
+│   └── paper-topic-maintenance-zh/
 ├── scripts/
 │   ├── download_paper_opencli.py
 │   ├── mineru_local_batch_extract.py
@@ -115,6 +123,13 @@ python scripts/validate_clean_notes.py --config paper-notes.config.json
 - 正式笔记必须使用 14 个二级标题
 - 后端抽取痕迹不能污染前端正式笔记
 - 图、表、chart 应进入 `figure_manifest.json`
+
+`skills/` 里的 companion Skills 定义 topic-family 层：
+
+- `paper-knowledge-family-zh`：编排整套论文知识流
+- `paper-topic-archive-zh`：把同类型论文收进专题归档
+- `paper-topic-survey-zh`：维护 `全景综述`、`学术综述` 和 `工程综述`
+- `paper-topic-maintenance-zh`：新论文加入后保持专题语料持续更新
 
 完整规范见 `skill/references/workflow.md` 和 `skill/references/clean-note-format.md`。
 

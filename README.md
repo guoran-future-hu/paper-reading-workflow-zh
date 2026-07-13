@@ -27,6 +27,8 @@ This repository packages an evidence-grounded Chinese paper-reading workflow as 
 1. a backend evidence workspace with MinerU extraction, manifests, figures, evidence cards, and strict reports
 2. a frontend Obsidian note with a clean 14-section Chinese reading format
 
+It also includes companion Skills for the topic-level layer: archive sync, overview survey, academic survey, engineering survey, and recurring topic maintenance.
+
 The public version is sanitized: local machine paths, private vault names, and internal service addresses are replaced by environment variables and example config.
 
 ## 1. Features
@@ -37,6 +39,7 @@ The public version is sanitized: local machine paths, private vault names, and i
 - Validate clean Chinese Obsidian notes against a fixed 14-section format
 - Track read markers and reading indexes
 - Keep topic archives separate from temporary reading inboxes
+- Maintain topic-level overview, academic, and engineering surveys
 
 ## 2. Repository Layout
 
@@ -45,6 +48,11 @@ The public version is sanitized: local machine paths, private vault names, and i
 ├── skill/
 │   ├── SKILL.md
 │   └── references/
+├── skills/
+│   ├── paper-knowledge-family-zh/
+│   ├── paper-topic-archive-zh/
+│   ├── paper-topic-survey-zh/
+│   └── paper-topic-maintenance-zh/
 ├── scripts/
 │   ├── download_paper_opencli.py
 │   ├── mineru_local_batch_extract.py
@@ -115,6 +123,13 @@ The Skill in `skill/SKILL.md` defines the working contract:
 - the formal note uses exactly 14 second-level sections
 - backend extraction traces must not leak into polished notes
 - figures/tables/charts should be registered in `figure_manifest.json`
+
+The companion Skills in `skills/` define the topic-family contract:
+
+- `paper-knowledge-family-zh`: orchestrates the whole family
+- `paper-topic-archive-zh`: folds same-type notes into topic archives
+- `paper-topic-survey-zh`: maintains `全景综述`, `学术综述`, and `工程综述`
+- `paper-topic-maintenance-zh`: keeps living corpora current after new papers arrive
 
 See `skill/references/workflow.md` and `skill/references/clean-note-format.md` for the full specification.
 
