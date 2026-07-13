@@ -40,7 +40,7 @@ Default script paths are intentionally local and safe:
 - Reading inbox: `./vault/论文阅读`
 - Archive root: `./vault/论文笔记`
 - Staging root: `./workspace/staging`
-- MinerU local API: `http://127.0.0.1:8010/file_parse`
+- MinerU local API base: `http://127.0.0.1:8010` (scripts append `/file_parse`)
 
 Read `references/workflow.md` before processing papers. Read `references/screenshot-download.md` before downloading papers from screenshots, URLs, titles, or adapter output. Read `references/clean-note-format.md` before writing or rewriting formal Obsidian notes.
 

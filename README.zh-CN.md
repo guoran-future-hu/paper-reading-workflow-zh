@@ -59,31 +59,31 @@ Paper Reading Workflow ZH 把一套本地读论文实践整理成可复用的 Co
   -> 持续维护
 ```
 
-主 Skill 在 `skill/SKILL.md`。topic-family Skills 在 `skills/`。
+所有 Skill 都在 `skills/` 下：单篇论文主 Skill 是 `skills/evidence-grounded-paper-notes-zh/`，topic-family Skills 与之并列。
 
 ## 3. 仓库结构
 
 ```text
 .
-├── skill/
-│   ├── SKILL.md
-│   └── references/
 ├── skills/
+│   ├── evidence-grounded-paper-notes-zh/
 │   ├── paper-knowledge-family-zh/
 │   ├── paper-topic-archive-zh/
 │   ├── paper-topic-survey-zh/
 │   └── paper-topic-maintenance-zh/
-├── scripts/
-│   ├── download_paper_opencli.py
-│   ├── mineru_local_batch_extract.py
-│   ├── build_figure_manifest.py
-│   └── validate_clean_notes.py
 ├── paper_notes/
-│   └── config.py
-├── images/
-│   ├── workflow-en.svg
-│   └── workflow-zh.svg
+│   ├── config.py
+│   ├── download.py
+│   ├── mineru_extract.py
+│   ├── figure_manifest.py
+│   └── validate_notes.py
+├── scripts/            # paper_notes 模块的薄壳入口
+├── tests/
 ├── examples/
+│   ├── paper-notes.config.example.json
+│   ├── read-marker.example.md
+│   └── sample-vault/   # 校验器可直接跑的演示 vault
+├── images/
 ├── NOTICE.md
 └── README.md
 ```
@@ -108,6 +108,14 @@ python -m pip install ".[visual]"
 git clone https://github.com/LeoLin990405/paper-reading-workflow-zh.git
 cd paper-reading-workflow-zh
 python -m pip install -e .
+```
+
+安装后会得到 `paper-notes-download`、`paper-notes-extract`、`paper-notes-figures`、`paper-notes-validate` 四个命令。下面的 `python scripts/*.py` 形式不安装也能直接用。
+
+先在自带的示例 vault 上跑一遍校验器（不需要 MinerU 或 OpenCLI）：
+
+```bash
+paper-notes-validate --notes-dir "examples/sample-vault/注意力机制"
 ```
 
 创建私有配置：
@@ -195,7 +203,17 @@ PDF 原文
 
 `Evidence`、`Inference`、`MinerU`、`full_text`、`paper_index`、`evidence_cards` 等后端术语不应出现在 polished note 正文中。
 
-## 9. 致谢
+## 9. 开发与测试
+
+```bash
+python -m pip install -e ".[dev]"
+ruff check paper_notes scripts tests
+pytest
+```
+
+CI 在 Python 3.10 和 3.12 上跑 lint、单元测试，并对 `examples/sample-vault/` 做一次完整校验。
+
+## 10. 致谢
 
 这个项目是在参考 [MoonKirito/evidence-grounded-paper-deep-read](https://github.com/MoonKirito/evidence-grounded-paper-deep-read) 之后继续迭代出来的；该项目是 MIT License 的 paper-reading Skill。
 
@@ -203,6 +221,6 @@ PDF 原文
 
 更完整的来源说明见 `NOTICE.md`。
 
-## 10. License
+## 11. License
 
 MIT。见 `LICENSE`。

@@ -12,6 +12,7 @@ workspace/
 vault/
 archives/
 *.pdf
+!examples/**/*.pdf
 *.download.json
 
 # Local/private configuration

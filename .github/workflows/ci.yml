@@ -8,10 +8,21 @@ on:
 jobs:
   python:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
+      - name: Install package with dev extras
+        run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check paper_notes scripts tests
       - name: Compile scripts
         run: python -m compileall paper_notes scripts
+      - name: Unit tests
+        run: pytest -q
+      - name: Validate bundled sample vault
+        run: paper-notes-validate --notes-dir "examples/sample-vault/注意力机制"

@@ -59,31 +59,31 @@ paper title / URL / PDF
   -> recurring maintenance
 ```
 
-The main Skill lives in `skill/SKILL.md`. The topic-family Skills live in `skills/`.
+All Skills live in `skills/`. The single-paper Skill is `skills/evidence-grounded-paper-notes-zh/`; the topic-family Skills sit next to it.
 
 ## 3. Repository Layout
 
 ```text
 .
-├── skill/
-│   ├── SKILL.md
-│   └── references/
 ├── skills/
+│   ├── evidence-grounded-paper-notes-zh/
 │   ├── paper-knowledge-family-zh/
 │   ├── paper-topic-archive-zh/
 │   ├── paper-topic-survey-zh/
 │   └── paper-topic-maintenance-zh/
-├── scripts/
-│   ├── download_paper_opencli.py
-│   ├── mineru_local_batch_extract.py
-│   ├── build_figure_manifest.py
-│   └── validate_clean_notes.py
 ├── paper_notes/
-│   └── config.py
-├── images/
-│   ├── workflow-en.svg
-│   └── workflow-zh.svg
+│   ├── config.py
+│   ├── download.py
+│   ├── mineru_extract.py
+│   ├── figure_manifest.py
+│   └── validate_notes.py
+├── scripts/            # thin wrappers around paper_notes modules
+├── tests/
 ├── examples/
+│   ├── paper-notes.config.example.json
+│   ├── read-marker.example.md
+│   └── sample-vault/   # runnable demo vault for the validator
+├── images/
 ├── NOTICE.md
 └── README.zh-CN.md
 ```
@@ -108,6 +108,14 @@ Clone and install locally:
 git clone https://github.com/LeoLin990405/paper-reading-workflow-zh.git
 cd paper-reading-workflow-zh
 python -m pip install -e .
+```
+
+Installing exposes `paper-notes-download`, `paper-notes-extract`, `paper-notes-figures`, and `paper-notes-validate` as commands. The `python scripts/*.py` forms below also work straight from a clone without installing.
+
+Try the validator on the bundled sample vault (no MinerU or OpenCLI needed):
+
+```bash
+paper-notes-validate --notes-dir "examples/sample-vault/注意力机制"
 ```
 
 Create a private config:
@@ -195,7 +203,17 @@ PDF 原文
 
 Backend terms such as `Evidence`, `Inference`, `MinerU`, `full_text`, `paper_index`, and `evidence_cards` should stay out of the polished note body.
 
-## 9. Attribution
+## 9. Development
+
+```bash
+python -m pip install -e ".[dev]"
+ruff check paper_notes scripts tests
+pytest
+```
+
+CI runs lint, unit tests, and a validation pass over `examples/sample-vault/` on Python 3.10 and 3.12.
+
+## 10. Attribution
 
 This project was iterated after studying [MoonKirito/evidence-grounded-paper-deep-read](https://github.com/MoonKirito/evidence-grounded-paper-deep-read), a paper-reading Skill released under the MIT License.
 
@@ -203,6 +221,6 @@ Thanks also to [OpenCLI](https://github.com/jackwener/OpenCLI) for adapter-style
 
 See `NOTICE.md` for attribution details.
 
-## 10. License
+## 11. License
 
 MIT. See `LICENSE`.
