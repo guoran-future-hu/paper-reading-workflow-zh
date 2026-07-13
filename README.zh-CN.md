@@ -4,44 +4,62 @@
 
 # Paper Reading Workflow ZH
 
-### 面向 PDF、MinerU 与 Obsidian 的中文证据驱动读论文流程
+### 面向中文论文笔记、专题归档和综述的本地优先证据工作流
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Local%20First-black?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Language-Python-blue?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Notes-Obsidian-purple?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Workflow-Skills%20%2B%20Obsidian-purple?style=for-the-badge" />
   <a href="https://github.com/LeoLin990405/paper-reading-workflow-zh/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/LeoLin990405/paper-reading-workflow-zh/ci.yml?branch=main&style=for-the-badge&label=CI" /></a>
   <img src="https://img.shields.io/badge/License-MIT-yellowgreen?style=for-the-badge" />
 </p>
 
 </div>
 
-> 这是我本地读论文流程的可复用版本：下载 PDF，用 MinerU 抽取，保留严格证据层，再写成干净、可复读的中文 Obsidian 正式笔记。
+> 把零散 PDF 变成一个活的中文研究语料库：源文件、抽取证据、Obsidian 笔记、专题归档、全景/学术/工程综述彼此连起来。
 
 ---
 
 ## 概览
 
-这个仓库把一套证据驱动的中文读论文流程整理成可复用 Skill 和辅助脚本。核心是双层结构：
+Paper Reading Workflow ZH 把一套本地读论文实践整理成可复用的 Codex Skills 和 Python 辅助脚本。它面向的不是一次性摘要，而是可追溯、可复读、可继续生长的论文知识库。
 
-1. 后端证据层：MinerU 抽取、图表清单、裁图、证据卡、严格报告
-2. 前端笔记层：Obsidian 中干净可读的 14 节中文论文笔记
+工作流分成两个层级：
 
-它还包含 topic 级别的 companion Skills：专题归档、全景综述、学术综述、工程综述和持续维护。
+- **单篇论文：** 下载或登记 PDF，抽取文本和图表，保留证据制品，写成 14 节中文 Obsidian 笔记，并创建已读标记。
+- **专题语料：** 把同类型论文并入 topic archive，维护 inventory，并刷新全景综述、学术综述和工程综述。
 
-公开版已经做过脱敏：本机路径、私有 vault 名称、内网服务地址都替换成环境变量和示例配置。
+公开仓库不会保存私有路径和本地服务地址。真实位置通过环境变量或 `paper-notes.config.json` 配置，后者已加入 `.gitignore`。
 
-## 1. 功能
+## 1. 处理对象
 
-- 通过 arXiv ID、URL 或标题解析并下载论文
-- 调用本地 MinerU API 批量抽取 PDF
-- 从 MinerU 输出生成图、表、chart 的证据清单
-- 校验中文 Obsidian 正式笔记是否满足固定 14 节结构
-- 记录已读标记和阅读索引
-- 把临时阅读 inbox 和长期 topic archive 分开维护
-- 维护 topic 级全景综述、学术综述和工程综述
+| 层级 | 产物 | 作用 |
+|---|---|---|
+| 论文 inbox | PDF 与已读标记 | 明确源文件和阅读状态 |
+| 证据工作区 | MinerU JSON/Markdown、图表、manifest、报告 | 保留抽取和论点证据 |
+| 正式笔记 | 14 节中文 Obsidian 笔记 | 让论文可读、可复查 |
+| 专题归档 | 笔记、PDF、`_evidence_reports`、索引、inventory | 把同类型论文变成语料库 |
+| 专题综述 | `全景综述`、`学术综述`、`工程综述` | 把语料库转成可复用综合判断 |
 
-## 2. 仓库结构
+## 2. 工作流地图
+
+```text
+论文标题 / URL / PDF
+  -> OpenCLI 辅助发现
+  -> PDF inbox
+  -> MinerU 抽取
+  -> 证据工作区
+  -> 图表证据清单
+  -> 中文 Obsidian 正式笔记
+  -> 已读标记 + 阅读索引
+  -> 专题归档
+  -> 全景 / 学术 / 工程综述
+  -> 持续维护
+```
+
+主 Skill 在 `skill/SKILL.md`。topic-family Skills 在 `skills/`。
+
+## 3. 仓库结构
 
 ```text
 .
@@ -61,33 +79,39 @@
 ├── paper_notes/
 │   └── config.py
 ├── examples/
-│   ├── paper-notes.config.example.json
-│   └── read-marker.example.md
 ├── NOTICE.md
 └── README.md
 ```
 
-## 3. 依赖
+## 4. 依赖
 
 - Python 3.10+
 - `curl`
-- `opencli`，用于论文解析，推荐安装
-- 本地 MinerU API，用于 PDF 抽取
-- 只有在裁图时才需要 Poppler `pdftoppm` 和 `Pillow`：
+- [OpenCLI](https://github.com/jackwener/OpenCLI)，用于论文发现，推荐安装
+- 本地 [MinerU](https://github.com/opendatalab/MinerU) API，用于 PDF 抽取
+- 只有裁图时才需要 Poppler `pdftoppm` 和 `Pillow`：
 
 ```bash
 python -m pip install ".[visual]"
 ```
 
-## 4. 快速开始
+## 5. 快速开始
 
-复制并编辑示例配置：
+克隆并本地安装：
+
+```bash
+git clone https://github.com/LeoLin990405/paper-reading-workflow-zh.git
+cd paper-reading-workflow-zh
+python -m pip install -e .
+```
+
+创建私有配置：
 
 ```bash
 cp examples/paper-notes.config.example.json paper-notes.config.json
 ```
 
-下载论文：
+下载或登记论文：
 
 ```bash
 python scripts/download_paper_opencli.py \
@@ -113,26 +137,6 @@ python scripts/build_figure_manifest.py --config paper-notes.config.json
 python scripts/validate_clean_notes.py --config paper-notes.config.json
 ```
 
-## 5. 流程契约
-
-`skill/SKILL.md` 定义了完整工作契约：
-
-- 源 PDF 进入配置好的 inbox
-- 抽取证据放在 `_evidence_reports/<paper-slug>/`
-- 最终 PDF 和正式笔记进入 topic archive
-- 正式笔记必须使用 14 个二级标题
-- 后端抽取痕迹不能污染前端正式笔记
-- 图、表、chart 应进入 `figure_manifest.json`
-
-`skills/` 里的 companion Skills 定义 topic-family 层：
-
-- `paper-knowledge-family-zh`：编排整套论文知识流
-- `paper-topic-archive-zh`：把同类型论文收进专题归档
-- `paper-topic-survey-zh`：维护 `全景综述`、`学术综述` 和 `工程综述`
-- `paper-topic-maintenance-zh`：新论文加入后保持专题语料持续更新
-
-完整规范见 `skill/references/workflow.md` 和 `skill/references/clean-note-format.md`。
-
 ## 6. 配置
 
 可以使用 `paper-notes.config.json`，也可以设置环境变量：
@@ -145,18 +149,55 @@ export PAPER_NOTES_STAGING_ROOT="$HOME/Archives/paper-reading-workflow"
 export MINERU_LOCAL_URL="http://127.0.0.1:8010"
 ```
 
-`paper-notes.config.json` 已加入 `.gitignore`，真实本地路径不会进仓库。
+`examples/paper-notes.config.example.json` 记录了同一组字段。真实配置留在本地即可。
 
-## 7. 致谢与来源说明
+## 7. Skill Family
 
-这个项目明确注明：它不是从零凭空发明的流程，而是在参考 [MoonKirito/evidence-grounded-paper-deep-read](https://github.com/MoonKirito/evidence-grounded-paper-deep-read) 这个 MIT License 的 paper-reading Skill 之后，结合我自己的本地实践继续迭代出来的版本。
+| Skill | 作用 |
+|---|---|
+| `evidence-grounded-paper-notes-zh` | 单篇论文下载、抽取、写笔记、已读标记 |
+| `paper-knowledge-family-zh` | 编排整套论文知识流 |
+| `paper-topic-archive-zh` | 把同类型论文收进专题归档 |
+| `paper-topic-survey-zh` | 维护 `全景综述`、`学术综述` 和 `工程综述` |
+| `paper-topic-maintenance-zh` | 新论文加入后保持专题语料持续更新 |
 
-我主要把它扩展到中文 Obsidian 笔记、MinerU 抽取、证据工作区、图表证据清单、已读标记和 topic archive 维护。
+核心规则是：
 
-也感谢 [OpenCLI](https://github.com/jackwener/OpenCLI) 提供 adapter 式的论文发现能力，以及 [MinerU](https://github.com/opendatalab/MinerU) 提供文档到 Markdown/JSON 的抽取能力。没有这两个项目，这套流程会笨重很多。
+```text
+单篇笔记 -> 专题归档 -> 综述刷新 -> 持续维护
+```
 
-公开仓库已经做过泛化和脱敏；私有路径和本地服务地址不会进入版本控制。更完整的来源说明见 `NOTICE.md`。
+## 8. 笔记契约
 
-## 8. License
+正式 Obsidian 笔记使用固定 14 节结构：
+
+```text
+PDF 原文
+已读信息
+1. 一句话总览
+2. 论文基本信息
+3. 研究问题
+4. 核心方法
+5. 关键图表解读
+6. 实验与结果
+7. 公式与技术细节
+8. 核心概念解释
+9. 创新点与深度理解
+10. 局限与批判
+11. 和已读论文的关系
+12. 对我的启发
+```
+
+`Evidence`、`Inference`、`MinerU`、`full_text`、`paper_index`、`evidence_cards` 等后端术语不应出现在 polished note 正文中。
+
+## 9. 致谢
+
+这个项目是在参考 [MoonKirito/evidence-grounded-paper-deep-read](https://github.com/MoonKirito/evidence-grounded-paper-deep-read) 之后继续迭代出来的；该项目是 MIT License 的 paper-reading Skill。
+
+也感谢 [OpenCLI](https://github.com/jackwener/OpenCLI) 提供 adapter 式论文发现能力，以及 [MinerU](https://github.com/opendatalab/MinerU) 提供文档到 Markdown/JSON 的抽取能力。
+
+更完整的来源说明见 `NOTICE.md`。
+
+## 10. License
 
 MIT。见 `LICENSE`。

@@ -4,44 +4,62 @@
 
 # Paper Reading Workflow ZH
 
-### Evidence-grounded Chinese paper notes for PDFs, MinerU, and Obsidian
+### Local-first evidence workflows for Chinese paper notes, topic archives, and surveys
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Local%20First-black?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Language-Python-blue?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Notes-Obsidian-purple?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Workflow-Skills%20%2B%20Obsidian-purple?style=for-the-badge" />
   <a href="https://github.com/LeoLin990405/paper-reading-workflow-zh/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/LeoLin990405/paper-reading-workflow-zh/ci.yml?branch=main&style=for-the-badge&label=CI" /></a>
   <img src="https://img.shields.io/badge/License-MIT-yellowgreen?style=for-the-badge" />
 </p>
 
 </div>
 
-> A reusable version of my local paper-reading process: download PDFs, extract them with MinerU, keep a strict evidence layer, and write clean Chinese Obsidian notes that remain readable after the automation is gone.
+> Turn scattered PDFs into a living Chinese research corpus: source files, extraction evidence, readable Obsidian notes, topic archives, and overview / academic / engineering surveys stay connected.
 
 ---
 
 ## Overview
 
-This repository packages an evidence-grounded Chinese paper-reading workflow as a portable Skill plus helper scripts. It is built around a two-layer contract:
+Paper Reading Workflow ZH packages a local paper-reading practice into reusable Codex Skills and Python helpers. It is designed for readers who do not want a disposable summary: every processed paper keeps a backend evidence workspace, a clean Chinese Obsidian note, and a path into a topic-level archive.
 
-1. a backend evidence workspace with MinerU extraction, manifests, figures, evidence cards, and strict reports
-2. a frontend Obsidian note with a clean 14-section Chinese reading format
+The workflow is intentionally split into two levels:
 
-It also includes companion Skills for the topic-level layer: archive sync, overview survey, academic survey, engineering survey, and recurring topic maintenance.
+- **Single paper:** download or register a PDF, extract text and visuals, keep evidence artifacts, write a 14-section Chinese note, mark it as read.
+- **Topic corpus:** fold same-type papers into a topic archive, maintain an inventory, and refresh overview, academic, and engineering surveys.
 
-The public version is sanitized: local machine paths, private vault names, and internal service addresses are replaced by environment variables and example config.
+Private paths and local service addresses are kept out of the repository. Real locations live in environment variables or `paper-notes.config.json`, which is ignored by git.
 
-## 1. Features
+## 1. What It Handles
 
-- Resolve and download papers from arXiv IDs, URLs, or titles with `opencli`
-- Batch extract PDFs through a local MinerU API
-- Generate figure/table/chart manifests from MinerU output
-- Validate clean Chinese Obsidian notes against a fixed 14-section format
-- Track read markers and reading indexes
-- Keep topic archives separate from temporary reading inboxes
-- Maintain topic-level overview, academic, and engineering surveys
+| Layer | Output | Purpose |
+|---|---|---|
+| Paper inbox | PDFs and read markers | Keep source files and reading status explicit |
+| Evidence workspace | MinerU JSON/Markdown, figures, manifests, reports | Preserve extraction and claim-level grounding |
+| Formal note | 14-section Chinese Obsidian note | Make the paper readable and reviewable |
+| Topic archive | Notes, PDFs, `_evidence_reports`, index, inventory | Treat same-type papers as a corpus |
+| Topic surveys | `全景综述`, `学术综述`, `工程综述` | Turn a corpus into reusable synthesis |
 
-## 2. Repository Layout
+## 2. Workflow Map
+
+```text
+paper title / URL / PDF
+  -> OpenCLI-assisted discovery
+  -> PDF inbox
+  -> MinerU extraction
+  -> evidence workspace
+  -> visual manifest
+  -> clean Chinese Obsidian note
+  -> read marker + reading index
+  -> topic archive
+  -> overview / academic / engineering surveys
+  -> recurring maintenance
+```
+
+The main Skill lives in `skill/SKILL.md`. The topic-family Skills live in `skills/`.
+
+## 3. Repository Layout
 
 ```text
 .
@@ -61,33 +79,39 @@ The public version is sanitized: local machine paths, private vault names, and i
 ├── paper_notes/
 │   └── config.py
 ├── examples/
-│   ├── paper-notes.config.example.json
-│   └── read-marker.example.md
 ├── NOTICE.md
 └── README.zh-CN.md
 ```
 
-## 3. Requirements
+## 4. Requirements
 
 - Python 3.10+
 - `curl`
-- `opencli` for paper resolution, optional but recommended
-- A local MinerU API for PDF extraction
-- Poppler `pdftoppm` and `Pillow` only when using visual cropping:
+- [OpenCLI](https://github.com/jackwener/OpenCLI), optional but recommended for paper discovery
+- A local [MinerU](https://github.com/opendatalab/MinerU) API for PDF extraction
+- Poppler `pdftoppm` and `Pillow` only when cropping visual evidence:
 
 ```bash
 python -m pip install ".[visual]"
 ```
 
-## 4. Quick Start
+## 5. Quick Start
 
-Copy and edit the example config:
+Clone and install locally:
+
+```bash
+git clone https://github.com/LeoLin990405/paper-reading-workflow-zh.git
+cd paper-reading-workflow-zh
+python -m pip install -e .
+```
+
+Create a private config:
 
 ```bash
 cp examples/paper-notes.config.example.json paper-notes.config.json
 ```
 
-Download a paper:
+Download or register a paper:
 
 ```bash
 python scripts/download_paper_opencli.py \
@@ -95,7 +119,7 @@ python scripts/download_paper_opencli.py \
   --config paper-notes.config.json
 ```
 
-Extract PDFs through MinerU:
+Extract PDFs with MinerU:
 
 ```bash
 python scripts/mineru_local_batch_extract.py --config paper-notes.config.json
@@ -113,26 +137,6 @@ Validate formal notes:
 python scripts/validate_clean_notes.py --config paper-notes.config.json
 ```
 
-## 5. Workflow Contract
-
-The Skill in `skill/SKILL.md` defines the working contract:
-
-- source PDFs start in a configured inbox
-- extracted evidence lives in `_evidence_reports/<paper-slug>/`
-- final PDFs and notes live under a topic archive
-- the formal note uses exactly 14 second-level sections
-- backend extraction traces must not leak into polished notes
-- figures/tables/charts should be registered in `figure_manifest.json`
-
-The companion Skills in `skills/` define the topic-family contract:
-
-- `paper-knowledge-family-zh`: orchestrates the whole family
-- `paper-topic-archive-zh`: folds same-type notes into topic archives
-- `paper-topic-survey-zh`: maintains `全景综述`, `学术综述`, and `工程综述`
-- `paper-topic-maintenance-zh`: keeps living corpora current after new papers arrive
-
-See `skill/references/workflow.md` and `skill/references/clean-note-format.md` for the full specification.
-
 ## 6. Configuration
 
 Use `paper-notes.config.json`, or set environment variables:
@@ -145,16 +149,55 @@ export PAPER_NOTES_STAGING_ROOT="$HOME/Archives/paper-reading-workflow"
 export MINERU_LOCAL_URL="http://127.0.0.1:8010"
 ```
 
-`paper-notes.config.json` is ignored by git so private paths stay local.
+`examples/paper-notes.config.example.json` documents the same fields. Keep the real config local.
 
-## 7. Acknowledgements
+## 7. Skill Family
 
-This project explicitly acknowledges that it was iterated after studying [MoonKirito/evidence-grounded-paper-deep-read](https://github.com/MoonKirito/evidence-grounded-paper-deep-read), a paper-reading Skill released under the MIT License. I adapted the idea into my own Chinese Obsidian workflow with MinerU extraction, evidence workspaces, visual manifests, read markers, and topic-level archives.
+| Skill | Role |
+|---|---|
+| `evidence-grounded-paper-notes-zh` | Single-paper download, extraction, note writing, read markers |
+| `paper-knowledge-family-zh` | Orchestrates the whole paper knowledge family |
+| `paper-topic-archive-zh` | Folds same-type notes into topic archives |
+| `paper-topic-survey-zh` | Maintains `全景综述`, `学术综述`, and `工程综述` |
+| `paper-topic-maintenance-zh` | Keeps living corpora current after new papers arrive |
 
-Thanks also to [OpenCLI](https://github.com/jackwener/OpenCLI) for the adapter-style paper discovery flow, and [MinerU](https://github.com/opendatalab/MinerU) for document-to-Markdown/JSON extraction. Their projects make the workflow much more practical.
+The core rule is:
 
-The public repo is generalized and sanitized; private paths and local service addresses are intentionally kept out of version control. See `NOTICE.md` for attribution details.
+```text
+single-paper note -> topic archive -> survey refresh -> recurring maintenance
+```
 
-## 8. License
+## 8. Note Contract
+
+Formal Obsidian notes use a fixed 14-section structure:
+
+```text
+PDF 原文
+已读信息
+1. 一句话总览
+2. 论文基本信息
+3. 研究问题
+4. 核心方法
+5. 关键图表解读
+6. 实验与结果
+7. 公式与技术细节
+8. 核心概念解释
+9. 创新点与深度理解
+10. 局限与批判
+11. 和已读论文的关系
+12. 对我的启发
+```
+
+Backend terms such as `Evidence`, `Inference`, `MinerU`, `full_text`, `paper_index`, and `evidence_cards` should stay out of the polished note body.
+
+## 9. Attribution
+
+This project was iterated after studying [MoonKirito/evidence-grounded-paper-deep-read](https://github.com/MoonKirito/evidence-grounded-paper-deep-read), a paper-reading Skill released under the MIT License.
+
+Thanks also to [OpenCLI](https://github.com/jackwener/OpenCLI) for adapter-style paper discovery and [MinerU](https://github.com/opendatalab/MinerU) for document-to-Markdown/JSON extraction.
+
+See `NOTICE.md` for attribution details.
+
+## 10. License
 
 MIT. See `LICENSE`.
