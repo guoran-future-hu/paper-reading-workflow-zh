@@ -43,6 +43,8 @@ Paper Reading Workflow ZH 把一套本地读论文实践整理成可复用的 Co
 
 ## 2. 工作流地图
 
+![Paper Reading Workflow ZH 工作流示意图](images/workflow-zh.svg)
+
 ```text
 论文标题 / URL / PDF
   -> OpenCLI 辅助发现
@@ -78,6 +80,9 @@ Paper Reading Workflow ZH 把一套本地读论文实践整理成可复用的 Co
 │   └── validate_clean_notes.py
 ├── paper_notes/
 │   └── config.py
+├── images/
+│   ├── workflow-en.svg
+│   └── workflow-zh.svg
 ├── examples/
 ├── NOTICE.md
 └── README.md

@@ -43,6 +43,8 @@ Private paths and local service addresses are kept out of the repository. Real l
 
 ## 2. Workflow Map
 
+![Paper Reading Workflow ZH pipeline](images/workflow-en.svg)
+
 ```text
 paper title / URL / PDF
   -> OpenCLI-assisted discovery
@@ -78,6 +80,9 @@ The main Skill lives in `skill/SKILL.md`. The topic-family Skills live in `skill
 │   └── validate_clean_notes.py
 ├── paper_notes/
 │   └── config.py
+├── images/
+│   ├── workflow-en.svg
+│   └── workflow-zh.svg
 ├── examples/
 ├── NOTICE.md
 └── README.zh-CN.md
