@@ -134,9 +134,11 @@ export MINERU_LOCAL_URL="http://127.0.0.1:8010"
 
 ## 7. Acknowledgements
 
-This project explicitly acknowledges that it was iterated from another author's paper-reading Skill design. I studied that Skill pattern and then adapted the workflow for Chinese Obsidian notes, MinerU extraction, evidence workspaces, visual manifests, read markers, and topic-level archives.
+This project explicitly acknowledges that it was iterated after studying [MoonKirito/evidence-grounded-paper-deep-read](https://github.com/MoonKirito/evidence-grounded-paper-deep-read), a paper-reading Skill released under the MIT License. I adapted the idea into my own Chinese Obsidian workflow with MinerU extraction, evidence workspaces, visual manifests, read markers, and topic-level archives.
 
-The public repo is a generalized and sanitized derivative workflow. If you know the exact upstream Skill and license, keep its author, link, and license terms in `NOTICE.md`.
+Thanks also to [OpenCLI](https://github.com/jackwener/OpenCLI) for the adapter-style paper discovery flow, and [MinerU](https://github.com/opendatalab/MinerU) for document-to-Markdown/JSON extraction. Their projects make the workflow much more practical.
+
+The public repo is generalized and sanitized; private paths and local service addresses are intentionally kept out of version control. See `NOTICE.md` for attribution details.
 
 ## 8. License
 

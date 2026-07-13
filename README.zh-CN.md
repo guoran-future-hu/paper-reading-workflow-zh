@@ -134,9 +134,13 @@ export MINERU_LOCAL_URL="http://127.0.0.1:8010"
 
 ## 7. 致谢与来源说明
 
-这个项目明确注明：它不是从零凭空发明的流程，而是在参考另一位作者的 paper-reading Skill 设计之后，结合我自己的本地实践继续迭代出来的版本。
+这个项目明确注明：它不是从零凭空发明的流程，而是在参考 [MoonKirito/evidence-grounded-paper-deep-read](https://github.com/MoonKirito/evidence-grounded-paper-deep-read) 这个 MIT License 的 paper-reading Skill 之后，结合我自己的本地实践继续迭代出来的版本。
 
-我主要把它扩展到中文 Obsidian 笔记、MinerU 抽取、证据工作区、图表证据清单、已读标记和 topic archive 维护。公开仓库是经过泛化和脱敏后的衍生工作流。如果后续确认了原始上游 Skill 的作者、链接和 license，应该继续在 `NOTICE.md` 里保留精确致谢。
+我主要把它扩展到中文 Obsidian 笔记、MinerU 抽取、证据工作区、图表证据清单、已读标记和 topic archive 维护。
+
+也感谢 [OpenCLI](https://github.com/jackwener/OpenCLI) 提供 adapter 式的论文发现能力，以及 [MinerU](https://github.com/opendatalab/MinerU) 提供文档到 Markdown/JSON 的抽取能力。没有这两个项目，这套流程会笨重很多。
+
+公开仓库已经做过泛化和脱敏；私有路径和本地服务地址不会进入版本控制。更完整的来源说明见 `NOTICE.md`。
 
 ## 8. License
 
