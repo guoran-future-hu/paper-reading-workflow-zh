@@ -1,0 +1,19 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Local paper data and generated workspaces
+inbox/
+workspace/
+vault/
+archives/
+*.pdf
+*.download.json
+
+# Local/private configuration
+paper-notes.config.json
+.env

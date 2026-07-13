@@ -1,0 +1,8 @@
+{
+  "pdf_inbox": "~/Papers/inbox",
+  "reading_inbox": "~/Documents/Obsidian/ResearchVault/论文阅读",
+  "archive_root": "~/Documents/Obsidian/ResearchVault/论文笔记",
+  "staging_root": "~/Archives/paper-reading-workflow",
+  "mineru_url": "http://127.0.0.1:8010",
+  "evidence_deep_read_validator": "~/.claude/skills/evidence-grounded-paper-deep-read/scripts/validate_report.py"
+}
