@@ -16,26 +16,6 @@ def ascii_slug(value: str, fallback: str = "paper") -> str:
     return normalized or fallback
 
 
-def paper_id(
-    title: str | None = None,
-    year: int | str | None = None,
-    short_name: str | None = None,
-    source_name: str | None = None,
-) -> str:
-    """Build the preferred ASCII paper id.
-
-    A short name is used only when explicitly supplied. Without one, the full
-    title (or source filename stem) is used. The year is appended when known.
-    """
-    base = short_name or title or (Path(source_name).stem if source_name else "paper")
-    slug = ascii_slug(base)
-    if year is not None and str(year).strip():
-        year_slug = ascii_slug(str(year), fallback="")
-        if year_slug:
-            slug = f"{slug}-{year_slug}"
-    return slug
-
-
 def disambiguate_paper_id(candidate: str, source: Path, existing: Path) -> str:
     """Add a stable short content suffix when a candidate already belongs to another PDF."""
     target = existing / candidate
@@ -57,5 +37,5 @@ def disambiguate_paper_id(candidate: str, source: Path, existing: Path) -> str:
 
 
 def paper_id_from_pdf(pdf: Path) -> str:
-    """Use a descriptive source filename as a safe fallback identifier."""
-    return paper_id(source_name=pdf.name)
+    """Id for a PDF named after its title (the `--pdf` path); `paper-notes-init` slugs the title itself."""
+    return ascii_slug(pdf.stem)

@@ -22,7 +22,7 @@ from paper_notes.paper_dir import resolve_paper_dir, update_metadata
 SPLIT_SCRIPT = Path(os.environ.get(
     "PRUNE_PAPER_SPLIT", "~/.hermes/skills/prune-paper/scripts/split_sections.py"
 )).expanduser()
-SOURCES = ("defuddle", "datalab", "mineru")
+SOURCES = ("defuddle", "datalab")
 LOCAL_EMPTY = ("No references section detected locally.", "No appendix detected locally.")
 
 

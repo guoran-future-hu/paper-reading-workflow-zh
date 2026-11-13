@@ -25,10 +25,10 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-# ---- Chunks → MinerU content_list mapping ----
+# ---- Datalab chunks → content_list entries ----
 
 
-def _block_type_to_mineru(block_type: str) -> str:
+def _block_type(block_type: str) -> str:
     mapping = {
         "Picture": "image",
         "Figure": "image",
@@ -54,27 +54,27 @@ def safe_image_filename(original: str, ordinal: int) -> str:
 
 
 def build_content_list(chunks: dict) -> list[dict]:
-    """Map Datalab chunks blocks to MinerU-style content_list entries."""
+    """Map Datalab chunk blocks to the content_list entries the figure manifest reads."""
     blocks = chunks.get("blocks", [])
     content_list: list[dict] = []
     for block in blocks:
         btype = block.get("block_type", "")
-        mineru_type = _block_type_to_mineru(btype)
-        if mineru_type not in ("image", "table", "chart"):
+        block_kind = _block_type(btype)
+        if block_kind not in ("image", "table", "chart"):
             continue
         entry: dict = {
-            "type": mineru_type,
+            "type": block_kind,
             "bbox": block.get("bbox", []),
             "page_idx": block.get("page", 0),
         }
         # Caption from alt text
         alt = _extract_alt_from_html(block.get("html", ""))
-        if mineru_type == "image":
+        if block_kind == "image":
             entry["image_caption"] = [alt] if alt else []
-        elif mineru_type == "table":
+        elif block_kind == "table":
             entry["table_caption"] = [alt] if alt else []
             entry["table_body"] = block.get("html", "")
-        elif mineru_type == "chart":
+        elif block_kind == "chart":
             entry["chart_caption"] = [alt] if alt else []
         # Map image keys to paths
         images = block.get("images", {})
@@ -123,7 +123,7 @@ def extract_one(
 ) -> tuple[str, str]:
     """Extract one PDF via Datalab API.
 
-    Returns (status, notes) like mineru_extract.extract_one().
+    Returns (status, notes).
     """
     from datalab_sdk import ConvertOptions, DatalabClient
 

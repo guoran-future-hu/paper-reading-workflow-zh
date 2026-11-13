@@ -1,4 +1,4 @@
-"""Validate formal English Obsidian paper notes."""
+"""Validate the paper notes in the reading inbox against their raw folders and the reading index."""
 from __future__ import annotations
 
 import argparse
@@ -9,11 +9,8 @@ from pathlib import Path
 from paper_notes.config import load_config
 
 PDF_SECTION = "## PDF Source"
+INDEX_NAME = "reading-index.md"
 
-MACHINE_TRACE = re.compile(
-    r"\b(Evidence:|Inference from|Not clearly stated|MinerU|full_text|paper_index|"
-    r"evidence_cards|report\.md|完整性自检|证据锚点)\b"
-)
 RAW_ID = re.compile(r"^raw/([^/]+)/")
 
 
@@ -58,35 +55,22 @@ def validate_sections(path: Path, text: str, errors: list[str]) -> None:
         body = text[current.end():following.start() if following else len(text)]
         if not body.strip():
             errors.append(f"{path.name}: empty section {current.group(0).strip()}")
-    if MACHINE_TRACE.search(text):
-        errors.append(f"{path.name}: contains backend/report trace wording")
     if "<!-- TODO" in text:
         errors.append(f"{path.name}: unfilled scaffold marker <!-- TODO --> remains")
     if re.search(r"^\$$", text, flags=re.MULTILINE):
         errors.append(f"{path.name}: contains standalone single-dollar math delimiter")
 
 
-def _resolves(relative: str, roots: tuple[Path, ...]) -> bool:
-    return any((root / relative).exists() for root in roots)
-
-
-def validate_pdf_links(
-    notes_dir: Path, path: Path, text: str, errors: list[str], link_roots: tuple[Path, ...] = ()
-) -> None:
-    """Resolve note links against the note directory and any wider vault root.
-
-    `raw/<paper-id>/...` paths are vault-root relative (Obsidian wikilinks resolve
-    vault-wide), while legacy `pdfs/...` paths sit next to the note itself.
-    """
-    roots = (notes_dir, *link_roots)
+def validate_pdf_links(notes_dir: Path, path: Path, text: str, errors: list[str]) -> None:
+    """`source_pdf` and every `![[raw/...]]` embed resolve against the reading inbox."""
     source_pdf = frontmatter_value(text, "source_pdf")
     if not source_pdf:
         errors.append(f"{path.name}: missing source_pdf frontmatter")
-    elif not _resolves(source_pdf, roots):
+    elif not (notes_dir / source_pdf).exists():
         errors.append(f"{path.name}: source_pdf does not exist: {source_pdf}")
-    for target in re.findall(r"\[\[((?:pdfs|raw)/[^]|]+)(?:\|[^]]*)?\]\]", text):
-        if not _resolves(target, roots):
-            errors.append(f"{path.name}: missing PDF embed target {target}")
+    for target in re.findall(r"\[\[(raw/[^]|]+)(?:\|[^]]*)?\]\]", text):
+        if not (notes_dir / target).exists():
+            errors.append(f"{path.name}: missing embed target {target}")
 
 
 def validate_wiki_links(notes: list[Path], texts: dict[Path, str], errors: list[str]) -> None:
@@ -94,22 +78,16 @@ def validate_wiki_links(notes: list[Path], texts: dict[Path, str], errors: list[
     for path, text in texts.items():
         for match in re.finditer(r"\[\[([^]|#]+)(?:#[^]|]+)?(?:\|[^]]*)?\]\]", text):
             target = match.group(1)
-            if target.startswith(("pdfs/", "raw/")):
+            if target.startswith("raw/"):
                 continue
             if target not in note_stems:
                 errors.append(f"{path.name}: broken note link [[{target}]]")
 
 
 def manifest_expected_items(raw: object) -> int:
-    """Count manifest items, honoring an explicit per-item `skip: true` escape hatch."""
-    items = raw.get("items", []) if isinstance(raw, dict) else raw if isinstance(raw, list) else []
-    if any(isinstance(item, dict) and "selected" in item for item in items):
-        return sum(
-            1
-            for item in items
-            if isinstance(item, dict) and item.get("selected") and not item.get("skip")
-        )
-    return sum(1 for item in items if not (isinstance(item, dict) and item.get("skip")))
+    """Items the note must embed: selected and not skipped."""
+    items = raw.get("items", []) if isinstance(raw, dict) else []
+    return sum(1 for item in items if isinstance(item, dict) and item.get("selected") and not item.get("skip"))
 
 
 def note_evidence_ids(texts: dict[Path, str]) -> dict[str, list[Path]]:
@@ -123,40 +101,24 @@ def note_evidence_ids(texts: dict[Path, str]) -> dict[str, list[Path]]:
 
 
 def validate_figures(evidence_dir: Path, texts: dict[Path, str], errors: list[str]) -> None:
-    """Compare each manifest against the note that declares it via `source_pdf`.
+    """Each note embeds exactly its manifest's selected, unskipped items.
 
-    Evidence folders belonging to papers outside the validation scope are skipped:
-    `raw/` is shared by the whole vault, so a per-topic run must not fail on the
-    other topics' unfinished folders.
+    The owning note is the one whose `source_pdf` names that `raw/<paper-id>/`; raw folders
+    without a note yet are unfinished runs and are skipped.
     """
-    if not evidence_dir.exists():
-        return
-    owners = note_evidence_ids(texts)
-    for paper_dir in sorted(p for p in evidence_dir.iterdir() if p.is_dir()):
-        manifest = paper_dir / "figures" / "manifest.json"
-        raw_pattern = f"raw/{paper_dir.name}/figures/files/"
-        legacy_pattern = f"_evidence_reports/{paper_dir.name}/extracted/figures/"
+    for paper_id, owning in note_evidence_ids(texts).items():
+        manifest = evidence_dir / paper_id / "figures" / "manifest.json"
         if not manifest.exists():
-            manifest = paper_dir / "extracted" / "figure_manifest.json"
-            if not manifest.exists():
-                continue
+            continue
         try:
             raw = json.loads(manifest.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
-            errors.append(f"{paper_dir.name}: invalid figure manifest: {exc}")
+            errors.append(f"{paper_id}: invalid figure manifest: {exc}")
             continue
         expected = manifest_expected_items(raw)
-        if not expected:
-            continue
-        owning = owners.get(paper_dir.name)
-        if owning:
-            found = sum(texts[path].count(raw_pattern) for path in owning)
-        else:
-            found = sum(text.count(legacy_pattern) + text.count(raw_pattern) for text in texts.values())
-            if not found:
-                continue
+        found = sum(texts[path].count(f"raw/{paper_id}/figures/files/") for path in owning)
         if found != expected:
-            errors.append(f"{paper_dir.name}: manifest={expected}, note figure matches={found}")
+            errors.append(f"{paper_id}: manifest={expected}, note figure matches={found}")
 
 
 EVIDENCE_FILES = ("metadata.json", "text/pruned.md", "text/references.md", "text/appendix.md")
@@ -186,37 +148,30 @@ def validate_index(notes_dir: Path, index_name: str, notes: list[Path], errors: 
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate clean English Obsidian paper notes.")
-    parser.add_argument("--config", help="Optional JSON config file")
-    parser.add_argument("--notes-dir", help="Directory containing formal paper notes")
-    parser.add_argument("--vault-root", help="Vault root that raw/<paper-id>/ paths resolve against")
-    parser.add_argument("--evidence-dir", help="Raw evidence root; defaults to <vault-root>/raw")
-    parser.add_argument("--index-name", default="reading-index.md", help="Reading index file name to ignore")
+    parser = argparse.ArgumentParser(description="Validate the paper notes in the reading inbox.")
+    parser.add_argument("--notes-dir", help="Reading inbox to validate; defaults to the config's reading_inbox")
+    parser.add_argument("--config", help="JSON config; defaults to ./paper-notes.config.json")
     args = parser.parse_args()
 
     config = load_config(args.config)
     notes_dir = Path(args.notes_dir).expanduser().resolve() if args.notes_dir else config.reading_inbox
-    vault_root = Path(args.vault_root).expanduser().resolve() if args.vault_root else notes_dir
-    evidence_dir = Path(args.evidence_dir).expanduser().resolve() if args.evidence_dir else vault_root / "raw"
-
     errors: list[str] = []
     if not notes_dir.exists():
         errors.append(f"notes directory does not exist: {notes_dir}")
         return fail(errors)
-    notes = note_files(notes_dir, args.index_name)
+    notes = note_files(notes_dir, INDEX_NAME)
     if not notes:
         errors.append(f"no notes found in {notes_dir}")
         return fail(errors)
     texts = {path: path.read_text(encoding="utf-8") for path in notes}
-    link_roots = (vault_root,) if vault_root != notes_dir else ()
     for path, text in texts.items():
         validate_sections(path, text, errors)
         validate_ascii_machine_fields(path, text, errors)
-        validate_pdf_links(notes_dir, path, text, errors, link_roots)
+        validate_pdf_links(notes_dir, path, text, errors)
     validate_wiki_links(notes, texts, errors)
-    validate_figures(evidence_dir, texts, errors)
-    validate_evidence(evidence_dir, texts, errors)
-    validate_index(notes_dir, args.index_name, notes, errors)
+    validate_figures(notes_dir / "raw", texts, errors)
+    validate_evidence(notes_dir / "raw", texts, errors)
+    validate_index(notes_dir, INDEX_NAME, notes, errors)
     return fail(errors)
 
 

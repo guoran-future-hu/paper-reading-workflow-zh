@@ -1,11 +1,12 @@
+from pathlib import Path
+
 from paper_notes.figure_manifest import (
     clean_caption,
     has_visual_evidence,
     label_kind,
     safe_name,
-    scale_content_bbox,
 )
-from paper_notes.mineru_extract import slugify
+from paper_notes.naming import paper_id_from_pdf
 
 
 class TestVisualEvidence:
@@ -57,11 +58,6 @@ def test_clean_caption_strips_html_from_table_body():
     assert clean_caption(item) == "cell"
 
 
-def test_scale_content_bbox_uses_page_size():
-    item = {"bbox": [0, 0, 500, 1000]}
-    assert scale_content_bbox(item, [612.0, 792.0]) == [0.0, 0.0, 306.0, 792.0]
-
-
-def test_slugify():
-    assert slugify("Attention Is All You Need.pdf") == "attention-is-all-you-need"
-    assert slugify("你好.pdf") == "paper"
+def test_paper_id_from_pdf_name():
+    assert paper_id_from_pdf(Path("Attention Is All You Need.pdf")) == "attention-is-all-you-need"
+    assert paper_id_from_pdf(Path("你好.pdf")) == "paper"

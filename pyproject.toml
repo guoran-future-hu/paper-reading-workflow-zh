@@ -4,21 +4,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-reading-workflow-zh"
-version = "0.2.0"
-description = "An evidence-grounded paper reading workflow for PDFs, Datalab or MinerU, and English Obsidian notes."
+version = "0.3.0"
+description = "Paper reading pipeline: arXiv HTML or Datalab extraction into per-paper evidence folders and Obsidian notes."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-authors = [{ name = "Zhongyue Lin" }]
+authors = [{ name = "Zhongyue Lin" }, { name = "Guoran Hu" }]
 dependencies = ["datalab-python-sdk"]
 
 [project.optional-dependencies]
-visual = ["Pillow>=10.0"]
 dev = ["pytest>=8.0", "ruff>=0.4"]
 
 [project.scripts]
 paper-notes-download = "paper_notes.download:main"
-paper-notes-extract = "paper_notes.mineru_extract:main"
 paper-notes-extract-datalab = "paper_notes.datalab_extract:main"
 paper-notes-figures = "paper_notes.figure_manifest:main"
 paper-notes-validate = "paper_notes.validate_notes:main"

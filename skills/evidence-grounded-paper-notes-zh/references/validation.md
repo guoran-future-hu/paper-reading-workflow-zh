@@ -9,7 +9,6 @@ Validates every note in `<READING_INBOX>` against the `raw/` folder beside it. A
 It checks:
 
 - a `## PDF Source` section, at least one body section, no empty section, and no `<!-- TODO` marker left — which sections exist is the `paper-summarizer` skill's call, not the validator's
-- no backend wording in prose: `full_text`, `MinerU`, `Evidence:`, `paper_index`, `report.md` and the like — describe the paper, not the pipeline
 - `paper_id`, `status`, `source_pdf` and the note filename are ASCII
 - the PDF embed and `source_pdf` resolve
 - `[[note]]` links point at existing notes

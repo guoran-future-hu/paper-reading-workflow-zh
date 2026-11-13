@@ -1,3 +1,4 @@
+"""Paths and settings: defaults, PAPER_NOTES_* env vars, then paper-notes.config.json."""
 from __future__ import annotations
 
 import json
@@ -19,9 +20,6 @@ def env_path(name: str, default: str) -> Path:
 class PaperNotesConfig:
     pdf_inbox: Path
     reading_inbox: Path
-    archive_root: Path
-    mineru_url: str
-    extraction_backend: str = "datalab"
     datalab_api_key: str = ""
     appendix_policy: str = "auto"
     appendix_start_page: int | None = None
@@ -39,9 +37,6 @@ class PaperNotesConfig:
         return cls(
             pdf_inbox=env_path("PAPER_NOTES_PDF_INBOX", "./inbox/pdfs"),
             reading_inbox=env_path("PAPER_NOTES_READING_INBOX", "./vault/reading"),
-            archive_root=env_path("PAPER_NOTES_ARCHIVE_ROOT", "./vault/notes"),
-            mineru_url=os.environ.get("MINERU_LOCAL_URL", "http://127.0.0.1:8010").rstrip("/"),
-            extraction_backend=os.environ.get("PAPER_NOTES_EXTRACTION_BACKEND", "datalab"),
             datalab_api_key=os.environ.get("DATALAB_API_KEY", ""),
             appendix_policy=os.environ.get("PAPER_NOTES_APPENDIX_POLICY", "auto"),
             appendix_start_page=(
@@ -67,9 +62,6 @@ class PaperNotesConfig:
         return cls(
             pdf_inbox=pick_path("pdf_inbox", base.pdf_inbox),
             reading_inbox=pick_path("reading_inbox", base.reading_inbox),
-            archive_root=pick_path("archive_root", base.archive_root),
-            mineru_url=str(raw.get("mineru_url", base.mineru_url)).rstrip("/"),
-            extraction_backend=str(raw.get("extraction_backend", base.extraction_backend)),
             datalab_api_key=str(raw.get("datalab_api_key", base.datalab_api_key)),
             appendix_policy=str(raw.get("appendix_policy", base.appendix_policy)),
             appendix_start_page=(
@@ -84,9 +76,6 @@ class PaperNotesConfig:
         return {
             "pdf_inbox": str(self.pdf_inbox),
             "reading_inbox": str(self.reading_inbox),
-            "archive_root": str(self.archive_root),
-            "mineru_url": self.mineru_url,
-            "extraction_backend": self.extraction_backend,
             "appendix_policy": self.appendix_policy,
             "appendix_start_page": self.appendix_start_page,
         }

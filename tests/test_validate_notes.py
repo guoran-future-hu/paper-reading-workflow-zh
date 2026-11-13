@@ -69,12 +69,6 @@ class TestSections:
         validate_sections(Path("sample-2026.md"), text, errors)
         assert any("empty section ## 5. Results" in e for e in errors)
 
-    def test_machine_trace_rejected(self):
-        errors: list[str] = []
-        text = build_note().replace(FILLER, "MinerU output shows the table below.", 1)
-        validate_sections(Path("sample-2026.md"), text, errors)
-        assert any("trace wording" in e for e in errors)
-
     def test_standalone_dollar_rejected(self):
         errors: list[str] = []
         text = build_note() + "\n$\nx = 1\n$\n"
@@ -112,24 +106,6 @@ class TestLinks:
         errors: list[str] = []
         validate_pdf_links(notes_dir, notes_dir / "sample-2026.md", build_note(), errors)
         assert errors == []
-
-    def test_pdf_links_resolve_against_vault_root(self, tmp_path):
-        """Notes live in <archive>/<topic>/, but raw/ sits at the vault root."""
-        vault = tmp_path / "vault"
-        topic = vault / "notes" / "transformers"
-        topic.mkdir(parents=True)
-        (vault / "raw" / "sample").mkdir(parents=True)
-        (vault / "raw" / "sample" / "source.pdf").write_bytes(b"%PDF-1.4 fake")
-        note = topic / "sample-2026.md"
-        note.write_text(build_note(), encoding="utf-8")
-
-        errors: list[str] = []
-        validate_pdf_links(topic, note, build_note(), errors, link_roots=(vault,))
-        assert errors == []
-
-        without_root: list[str] = []
-        validate_pdf_links(topic, note, build_note(), without_root)
-        assert any("source_pdf does not exist" in e for e in without_root)
 
     def test_missing_source_pdf_frontmatter(self, tmp_path):
         notes_dir = make_vault(tmp_path, build_note())
@@ -203,21 +179,8 @@ class TestFigures:
         validate_figures(evidence_dir, {Path("sample-2026.md"): text}, errors)
         assert errors == []
 
-    def test_legacy_manifest_path_still_read(self, tmp_path):
-        legacy = tmp_path / "raw" / "sample" / "extracted"
-        legacy.mkdir(parents=True)
-        (legacy / "figure_manifest.json").write_text(
-            json.dumps({"items": [{"id": 1}]}), encoding="utf-8"
-        )
-        note = build_note("![[_evidence_reports/sample/extracted/figures/001-figure-1.png]]").replace(
-            'source_pdf: "raw/sample/source.pdf"', 'source_pdf: "pdfs/sample.pdf"'
-        )
-        errors: list[str] = []
-        validate_figures(tmp_path / "raw", {Path("sample-2026.md"): note}, errors)
-        assert errors == []
-
     def test_out_of_scope_paper_is_skipped(self, tmp_path):
-        """A per-topic run must not fail on other topics' evidence folders."""
+        """A raw folder no note claims yet is an unfinished run, not an error."""
         evidence_dir = self.write_manifest(
             tmp_path, [{"id": 1, "selected": True}, {"id": 2, "selected": True}]
         )
@@ -240,8 +203,7 @@ class TestFigures:
         assert errors == []
 
     def test_manifest_expected_items_shapes(self):
-        assert manifest_expected_items({"items": [{}, {"skip": True}]}) == 1
-        assert manifest_expected_items([{}, {}]) == 2
+        assert manifest_expected_items({"items": [{"selected": True}, {"selected": True, "skip": True}]}) == 1
         assert manifest_expected_items("garbage") == 0
         assert manifest_expected_items({"items": [{"selected": True}, {"selected": False}]}) == 1
 
