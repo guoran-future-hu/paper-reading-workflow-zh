@@ -1,6 +1,6 @@
 ---
 name: paper-knowledge-family-zh
-description: "Orchestrate a Chinese paper knowledge workflow family: single-paper notes, topic archive sync, overview/academic/engineering surveys, and recurring topic maintenance."
+description: "Orchestrate a paper knowledge workflow family: single-paper notes, topic archive sync, overview/academic/engineering surveys, and recurring topic maintenance."
 ---
 
 # Paper Knowledge Family ZH
@@ -26,7 +26,7 @@ It coordinates four layers:
 
 After a same-type paper is processed:
 
-1. the paper note must exist and be marked as read
+1. the paper note must exist and have `status: read`
 2. the paper must be folded into the correct topic archive
 3. the topic index and inventory must be refreshed
 4. the topic overview, academic survey, and engineering survey must be refreshed when needed

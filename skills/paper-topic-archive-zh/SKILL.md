@@ -11,8 +11,8 @@ description: "Archive same-type paper notes into a dedicated topic folder, norma
 
 1. 识别哪些笔记属于同一 topic。
 2. 将这些笔记统一归档到 `<ARCHIVE_ROOT>/<topic>/`。
-3. 统一 frontmatter、已读标记字段和 14 段正文结构。
-4. 复制并校验配套 PDF 与 `_evidence_reports` 资源。
+3. 统一 frontmatter、阅读状态字段和 15 段英文正文结构。
+4. 复制并校验配套 PDF 与 `raw/<paper-id>/` 资源。
 5. 维护专题索引和专题 inventory。
 
 ## Configuration
@@ -21,9 +21,8 @@ Use the same configuration contract as the main paper-note workflow:
 
 - `PAPER_NOTES_READING_INBOX`
 - `PAPER_NOTES_ARCHIVE_ROOT`
-- `PAPER_NOTES_STAGING_ROOT`
 
-The clean-note standard is defined in `skills/evidence-grounded-paper-notes-zh/references/clean-note-format.md`.
+The clean-note standard is defined in `skills/evidence-grounded-paper-notes-zh/SKILL.md`.
 
 ## When To Use
 
@@ -54,8 +53,7 @@ For each topic folder, keep:
 ```text
 <ARCHIVE_ROOT>/<topic>/
   *.md
-  pdfs/*.pdf
-  _evidence_reports/<slug>/
+  raw/<paper-id>/source.pdf
   <topic> 论文笔记归档索引.md
   _topic_inventory.json
 ```
@@ -64,18 +62,17 @@ For each topic folder, keep:
 
 Every archived paper note must satisfy:
 
-- same 14 H2 sections as the clean-note standard
+- same 15 H2 sections as the clean-note standard
 - frontmatter includes at least:
   - `title`
   - `authors`
   - `year`
   - `reading_date`
-  - `status: 已读`
-  - `read_marker: 已读`
+  - `status: read`
   - `source_pdf`
 - PDF embed resolves
 - figure embeds resolve
-- note remains Chinese-first in body prose
+- note remains English-first in body prose
 
 If a note already has strong body content but heading names differ, restructure instead of rewriting from scratch.
 

@@ -8,24 +8,35 @@ def test_defaults_are_local(monkeypatch, tmp_path):
         "PAPER_NOTES_PDF_INBOX",
         "PAPER_NOTES_READING_INBOX",
         "PAPER_NOTES_ARCHIVE_ROOT",
-        "PAPER_NOTES_STAGING_ROOT",
         "MINERU_LOCAL_URL",
-        "EVIDENCE_DEEP_READ_VALIDATOR",
+        "PAPER_NOTES_EXTRACTION_BACKEND",
+        "DATALAB_API_KEY",
+        "PAPER_NOTES_APPENDIX_POLICY",
+        "PAPER_NOTES_APPENDIX_START_PAGE",
     ):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.chdir(tmp_path)
     config = PaperNotesConfig.defaults()
     assert config.pdf_inbox == tmp_path / "inbox" / "pdfs"
+    assert config.reading_inbox == tmp_path / "vault" / "reading"
+    assert config.archive_root == tmp_path / "vault" / "notes"
     assert config.mineru_url == "http://127.0.0.1:8010"
-    assert config.evidence_deep_read_validator is None
+    assert config.extraction_backend == "datalab"
+    assert config.datalab_api_key == ""
+    assert config.appendix_policy == "auto"
+    assert config.appendix_start_page is None
 
 
 def test_env_overrides(monkeypatch, tmp_path):
     monkeypatch.setenv("PAPER_NOTES_PDF_INBOX", str(tmp_path / "papers"))
     monkeypatch.setenv("MINERU_LOCAL_URL", "http://127.0.0.1:9999/")
+    monkeypatch.setenv("PAPER_NOTES_EXTRACTION_BACKEND", "mineru")
+    monkeypatch.setenv("PAPER_NOTES_APPENDIX_START_PAGE", "18")
     config = PaperNotesConfig.defaults()
     assert config.pdf_inbox == tmp_path / "papers"
     assert config.mineru_url == "http://127.0.0.1:9999"
+    assert config.extraction_backend == "mineru"
+    assert config.appendix_start_page == 18
 
 
 def test_from_file_overrides_and_derived_paths(monkeypatch, tmp_path):
@@ -35,8 +46,10 @@ def test_from_file_overrides_and_derived_paths(monkeypatch, tmp_path):
         json.dumps(
             {
                 "pdf_inbox": str(tmp_path / "inbox"),
-                "reading_inbox": str(tmp_path / "vault" / "论文阅读"),
+                "reading_inbox": str(tmp_path / "vault"),
                 "mineru_url": "http://127.0.0.1:8010/",
+                "datalab_api_key": "test-key",
+                "appendix_policy": "full",
             }
         ),
         encoding="utf-8",
@@ -44,8 +57,21 @@ def test_from_file_overrides_and_derived_paths(monkeypatch, tmp_path):
     config = PaperNotesConfig.from_file(config_path)
     assert config.pdf_inbox == tmp_path / "inbox"
     assert config.mineru_url == "http://127.0.0.1:8010"
-    assert config.read_marker_dir == tmp_path / "inbox" / "已读标记"
-    assert config.reading_index == tmp_path / "vault" / "论文阅读" / "论文阅读记录.md"
+    assert config.datalab_api_key == "test-key"
+    assert config.appendix_policy == "full"
+    assert config.inbox_evidence_root == tmp_path / "vault" / "raw"
+    assert config.reading_index == tmp_path / "vault" / "reading-index.md"
+
+
+def test_public_dict_never_leaks_the_api_key(tmp_path):
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps({"reading_inbox": str(tmp_path / "vault"), "datalab_api_key": "secret-value"}),
+        encoding="utf-8",
+    )
+    public = PaperNotesConfig.from_file(config_path).to_public_dict()
+    assert "datalab_api_key" not in public
+    assert "secret-value" not in json.dumps(public)
 
 
 def test_from_file_rejects_non_object(tmp_path):

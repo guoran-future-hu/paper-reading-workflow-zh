@@ -1,68 +1,22 @@
-# Screenshot / URL / OpenCLI Download Reference
+# Getting a Trusted PDF
 
-Use this reference when the user provides a screenshot of a paper page, a paper title, a DOI, an arXiv ID, or a website URL and asks to download/process the paper.
+Use when the user hands over a screenshot, title, arXiv ID, DOI or URL instead of a local PDF.
 
-## Resolution Order
+## Steps
 
-1. **Inspect screenshot**
-   - Extract visible title, author names, arXiv ID, DOI, venue name, URL, or PDF button text.
-   - If a local image is provided, use visual inspection/OCR from the image. Do not guess a title when text is unreadable.
+1. **Read the identifier.** From a screenshot, take the visible title, authors, arXiv ID, DOI or URL; an unreadable title is asked about, not guessed.
+2. **Resolve and download** with `.venv/bin/paper-notes-download`:
+   - arXiv ID or exact title → `--query "<id or title>"`. It looks the paper up through `opencli arxiv`, accepts only a near-exact title match, and otherwise exits listing the candidates.
+   - Any other page or PDF link → `--url "<url>"`; arXiv `abs/` links are turned into the PDF link.
+   - `--dry-run` prints the resolved PDF URL and target path without downloading.
+   The PDF lands in `inbox/pdfs/`, named after the title; the command itself checks it is a real, non-trivial PDF.
+3. **Get the record** for the next steps: `opencli arxiv paper <id>` prints the exact title, full author list and date as JSON (`data[0]`). Feed the title to `paper-notes-init --title` and authors/year to `paper-notes-scaffold`.
+4. Continue with step 2 of the main skill (`paper-notes-init`).
 
-2. **Use an adapter**
-   - Check existing adapters with `opencli list`.
-   - For arXiv:
+## Choosing a candidate
 
-   ```bash
-   opencli arxiv paper <id> -f json
-   opencli arxiv search "<paper title>" --limit 5 -f json
-   ```
+Prefer, in order: the exact arXiv ID the user gave; an exact title match on arXiv; the publisher's or conference's own PDF; the authors' project page. When candidates differ in title or version, ask the user. A merely similar title is never downloaded.
 
-   If an unquoted title search returns weak or unrelated candidates, retry with the exact title wrapped in quotes before using broader search.
+## Not on arXiv
 
-   - For broader web discovery:
-
-   ```bash
-   opencli brave search "<paper title> pdf" --limit 10 -f json
-   ```
-
-3. **Download**
-   - Prefer official PDF links:
-     - arXiv `https://arxiv.org/pdf/<id>`
-     - publisher PDF link
-     - official project/repository PDF
-   - Use:
-
-   ```bash
-   python scripts/download_paper_opencli.py \
-     --query "<title or arXiv ID>" \
-     --config paper-notes.config.json
-   ```
-
-   - For direct URLs:
-
-   ```bash
-   python scripts/download_paper_opencli.py \
-     --url "<paper or pdf url>" \
-     --config paper-notes.config.json
-   ```
-
-4. **Verify**
-   - Confirm the saved file exists, has `.pdf`, is non-empty, and `file <pdf>` identifies it as PDF.
-   - If the page resolves to HTML or a login wall, use the site-specific adapter or browser workflow, then download the actual PDF.
-   - After the PDF lands in `<PDF_INBOX>`, continue the normal workflow.
-
-## Candidate Selection
-
-Prefer candidates in this order:
-
-1. Exact arXiv ID from screenshot or user text.
-2. Exact title match from `opencli arxiv search`.
-3. Exact title match from official publisher or conference page.
-4. Exact title match from official project/repository.
-5. Search result that clearly exposes a PDF from a trusted domain.
-
-If more than one candidate has different titles or versions, ask the user before downloading. Do not automatically download a merely similar title.
-
-## Adapter Role
-
-Use adapters for page/search semantics. Use `curl` as the byte downloader after a PDF URL is known. Do not treat adapter output as trusted unless the title, identifier, and source URL agree.
+Find the publisher or project page (web search, or `opencli` for sites it has adapters for — `opencli list`), then `--url` the PDF link. A login wall or paywall goes to the `blocked-page-recovery` skill.

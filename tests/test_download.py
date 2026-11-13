@@ -87,3 +87,22 @@ class TestFilenames:
 
     def test_arxiv_pdf_strips_version(self):
         assert arxiv_pdf_from_id("1706.03762v5") == "https://arxiv.org/pdf/1706.03762"
+
+
+def test_run_json_unwraps_opencli_v2_envelope(monkeypatch):
+    import subprocess as sp
+
+    from paper_notes import download
+
+    def fake(stdout):
+        return lambda *a, **k: sp.CompletedProcess(a, 0, stdout=stdout, stderr="")
+
+    monkeypatch.setattr(download.subprocess, "run", fake('{"ok":true,"data":[{"id":"1","title":"T"}]}'))
+    assert download.run_json(["opencli"]) == [{"id": "1", "title": "T"}]
+    monkeypatch.setattr(download.subprocess, "run", fake('{"ok":false,"error":{"code":"EMPTY","message":"none"}}'))
+    try:
+        download.run_json(["opencli"])
+    except RuntimeError as exc:
+        assert "EMPTY" in str(exc)
+    else:
+        raise AssertionError("expected RuntimeError")

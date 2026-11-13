@@ -113,7 +113,7 @@ Do not leave surveys frozen at an older count after the topic corpus has changed
 These surveys must be:
 
 - detailed, not outline-only
-- Chinese-first
+- English-first
 - academically toned even in the engineering version
 - grounded in the actual archived notes, not generic background
 - internally linked to representative papers in the archive

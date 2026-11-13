@@ -1,109 +1,45 @@
 ---
 name: evidence-grounded-paper-notes-zh
-description: "End-to-end Chinese evidence-grounded paper reading workflow for PDFs, MinerU extraction, Obsidian notes, visual evidence manifests, read markers, and topic archive maintenance."
+description: "Process research PDFs into raw per-paper evidence and English Obsidian notes. Use for paper download or extraction, appendix-aware Datalab processing, paper-note writing, or selective visual evidence."
 ---
 
-# Evidence-Grounded Paper Notes ZH
+# Paper Reading Notes
 
-## Core Contract
+Default to a full-paper run. Stop early only when the user explicitly asks to resolve/download a source or rewrite an existing note.
 
-Produce two separate layers:
+For multiple papers, run one subagent per paper; each runs the full sequence for its own paper id only.
 
-1. **Backend evidence layer**
-   - A temporary staging evidence workspace may live under `<STAGING_ROOT>/.../_evidence_reports/<paper-slug>/`.
-   - After archival, the canonical evidence layer should live under `<ARCHIVE_ROOT>/<topic>/_evidence_reports/<paper-slug>/`.
-   - Use MinerU output, evidence cards, figure manifests, cropped figures, and `report.md`.
-   - Keep this layer strict and validator-friendly.
-2. **Frontend Obsidian formal note**
-   - Final notes should live under `<ARCHIVE_ROOT>/<topic>/<paper-note>.md`.
-   - Make the note clean, Chinese-first, readable, and reviewable.
-   - Do not expose extraction or validator process traces in the formal note.
-   - Do not concatenate the backend report and an old note into a duplicated double structure.
-   - Preserve source provenance in frontmatter, read markers, and archive manifests.
+Run every command from the repo root as `.venv/bin/<command>`; `paper-notes.config.json` and the `DATALAB_API_KEY` in `.env` load automatically. `<P>` is the paper id `paper-notes-init` prints — every later command takes it as `--paper-dir <P>`.
 
-`<READING_INBOX>` is a light operational inbox. Use it mainly for `论文阅读记录.md` and temporary staging needs, not as the long-term home of finished formal notes.
+## Full-Paper Run
 
-## Configuration
+1. **Trusted PDF and exact title.** Before resolving from a screenshot, title, URL, DOI or arXiv ID, read `references/screenshot-download.md`. Take the title from the paper or its arXiv record, never from the filename.
+2. **Raw folder.** `paper-notes-init --pdf <file> --title "<exact title>" [--source-url <url>]`
+   Creates `<READING_INBOX>/raw/<P>/` with `source.pdf`, `metadata.json`, `text/`, `figures/files/`. `<P>` is the title slug; a different PDF with the same title gets a hash suffix.
+3. **Extract.**
+   - HTML version exists (arXiv: `https://arxiv.org/html/<arxiv-id>`, or publisher HTML) → `paper-notes-extract-html --paper-dir <P> --url <url>`. Free: writes `defuddle/full_text.md`, restores the arXiv bibliography defuddle drops, saves the page's own figures as `NNN-<figure-label>-<asset>`, and builds `figures/manifest.json` with appendix figures pre-marked `skip`.
+   - Exit code 2 = no HTML version → paid path: `paper-notes-extract-datalab --paper-dir <P> --mode fast`, then `paper-notes-figures --paper-dir <P>`. Datalab receives only the pages before the detected appendix; the pdftotext copy of the rest lands in `text/*-local.md`.
+4. **Split.** `paper-notes-split --paper-dir <P>` → `text/pruned.md`, `references.md`, `appendix.md`, falling back to the `*-local.md` copies for any section the extraction lacks. It refuses to overwrite an already-pruned `pruned.md` without `--force`.
+   Then load the `prune-paper` skill and do its Phase 2–3 review and noise pruning on `text/pruned.md`.
+5. **Choose visuals.** `paper-notes-select --paper-dir <P>` lists the candidates. Keep only visuals that materially support the method, architecture, ablations or main results; appendix visuals stay skipped by default; zero is valid. Record the choice: `paper-notes-select --paper-dir <P> --id 1 --id 4 ...` (`--skip N` / `--unskip N` adjust single items).
+6. **Scaffold.** `paper-notes-scaffold --paper-dir <P> --authors "..." --year YYYY [--tag <ascii-tag> ...]` writes `<READING_INBOX>/<P>.md`: frontmatter, the PDF embed, the body sections from the `paper-summarizer` skill's Output block with its guidance as `<!-- TODO -->` markers, and a closing TODO block listing the chosen visuals to place.
+   Choose visuals before scaffolding. Changing the choice later means adding or removing embeds by hand until the note embeds exactly the selected, unskipped items — the validator counts them.
+7. **Write the note.** Load the `paper-summarizer` skill and write the body by it from `text/pruned.md` (plus `appendix.md` where it matters), replacing every `<!-- TODO -->` marker. That skill owns the sections and the writing; the rules below cover only what the pipeline needs.
+8. **Index.** `paper-notes-index --paper-id <P> --topic "<short label>"` adds or updates the paper's row in `<READING_INBOX>/reading-index.md`, the only reading index.
+9. **Validate.** Read `references/validation.md`, then run `paper-notes-validate`. Done means it prints `clean notes validation: ok`.
 
-Use `examples/paper-notes.config.example.json` as the local template, or set environment variables:
+## Pipeline Rules for the Note
 
-- `PAPER_NOTES_PDF_INBOX`
-- `PAPER_NOTES_READING_INBOX`
-- `PAPER_NOTES_ARCHIVE_ROOT`
-- `PAPER_NOTES_STAGING_ROOT`
-- `MINERU_LOCAL_URL`
-- `EVIDENCE_DEEP_READ_VALIDATOR`
+- English throughout. Display title/authors may be Unicode; filenames, paths, ids, YAML keys, tags and status stay ASCII.
+- Keep the frontmatter and `## PDF Source` as scaffolded.
+- Link other notes as `[[<paper-id>]]`, only notes that exist in `<READING_INBOX>`.
 
-Default script paths are intentionally local and safe:
+## Figures
 
-- PDF inbox: `./inbox/pdfs`
-- Reading inbox: `./vault/论文阅读`
-- Archive root: `./vault/论文笔记`
-- Staging root: `./workspace/staging`
-- MinerU local API base: `http://127.0.0.1:8010` (scripts append `/file_parse`)
+Figures have no section of their own. Place each chosen figure in whichever section it helps explain — an architecture diagram in the method, a results plot beside the results — then delete the scaffold's figure block. Every chosen figure is placed exactly once.
 
-Read `references/workflow.md` before processing papers. Read `references/screenshot-download.md` before downloading papers from screenshots, URLs, titles, or adapter output. Read `references/clean-note-format.md` before writing or rewriting formal Obsidian notes.
+Under each embed, one paragraph: **Fig. N — a short title of your own.** What the figure shows — which panel, row or curve is which, which model or setting produces what — then `Takeaway:` the one thing it establishes for the paper's argument.
 
-## Workflow
-
-1. If the request starts from a screenshot, URL, title, or search result, resolve and download the PDF first.
-   - Extract the paper title, arXiv ID, DOI, venue page, or URL.
-   - Prefer structured adapters such as `opencli arxiv` before broad web search.
-   - Save downloaded PDFs into `<PDF_INBOX>` with stable, readable file names.
-   - Use `scripts/download_paper_opencli.py` for direct URLs, arXiv IDs, and arXiv title search.
-2. Discover new PDFs.
-   - Compare source PDFs with per-topic `pdfs/`, archived notes, the reading index, and `已读标记/*.已读.md`.
-   - Treat a source PDF as handled only when attachment, note, index entry, and read marker all exist.
-3. Stage each new PDF for archival.
-   - Final canonical attachment goes to `<ARCHIVE_ROOT>/<topic>/pdfs/` without renaming it.
-4. Extract each source PDF with MinerU local API.
-   - Use `scripts/mineru_local_batch_extract.py`.
-   - Confirm API availability before a large run.
-5. Build or refresh the backend evidence layer.
-   - Required files include `source.pdf`, `metadata.json`, `mineru/result.json`, `mineru/full_text.md`, `paper_index.json`, `evidence_cards.md`, `report.md`, `extracted/full_text.md`, `extracted/sections.json`, `extracted/figure_manifest.json`, and `extracted/figures/`.
-6. Apply visual alignment.
-   - Register meaningful MinerU `image`, `table`, and `chart` items with caption/body and bbox.
-   - Use `scripts/build_figure_manifest.py` to create `extracted/figure_manifest.json`.
-   - If `--crop` is enabled, crop visuals from `source.pdf` into `extracted/figures/`.
-   - Embed the registered visual set in both backend `report.md` and formal Obsidian note.
-7. Write the formal Obsidian note in the clean Chinese format.
-   - Use exactly the 14 second-level sections in `references/clean-note-format.md`.
-   - Preserve frontmatter, H1 original title, PDF embed, and read status.
-   - Prefer Chinese prose. Keep English only where it preserves original technical meaning.
-   - Final formal note goes to `<ARCHIVE_ROOT>/<topic>/`, not the long-term inbox.
-   - Write long notes incrementally or through file-based scripts. Avoid one giant prompt/tool-call body for a full note.
-8. Create read markers in `<PDF_INBOX>/已读标记`.
-   - File name: `<PDF original file name>.已读.md`
-   - Include `source_pdf`, `note`, `status: 已读`, and `read_at`.
-9. Update `论文阅读记录.md`.
-   - Format: `1. [[笔记文件名|论文名称]]（YYYY-MM-DD，已读）— 阅读时间：YYYY-MM-DD HH:mm`
-10. Validate before reporting completion.
-   - Run backend report validation when a backend validator is configured.
-   - Run `scripts/validate_clean_notes.py`.
-   - Confirm PDF embeds, note links, figure counts, read markers, and machine-trace cleanup.
-11. If the paper belongs to an existing same-type topic corpus, continue into topic-family maintenance.
-   - Refresh topic index/inventory and survey files.
-   - Treat the topic archive as a living corpus unless the user explicitly defers maintenance.
-
-## Bundled Scripts
-
-- `scripts/download_paper_opencli.py`: resolve arXiv IDs/titles/direct URLs with opencli and download PDFs.
-- `scripts/mineru_local_batch_extract.py`: batch MinerU extraction for the configured PDF inbox and evidence workspace.
-- `scripts/build_figure_manifest.py`: build a figure/table/chart manifest from MinerU output, optionally cropping images.
-- `scripts/validate_clean_notes.py`: validate formal clean-note structure and consistency with figure manifests.
-
-## Completion Criteria
-
-Report completion only when all relevant items are true:
-
-- No unprocessed source PDF remains unless it is intentionally skipped and documented.
-- Screenshot/URL/title requests either produce a downloaded PDF or clearly document why no trusted PDF link could be resolved.
-- Every processed PDF has an Obsidian PDF attachment, formal note, index entry, and source read marker.
-- Every processed formal note lives in a topic archive, not as an unarchived long-term inbox note.
-- Every backend `report.md` passes the configured backend validator.
-- Every formal note has the clean 14-section structure.
-- Formal notes do not retain obsolete source-file lines in the polished body.
-- Formal notes have no backend trace terms such as `Evidence`, `Inference`, `MinerU`, `full_text`, `paper_index`, or `evidence_cards`.
-- Formal note figure embed counts match `extracted/figure_manifest.json`.
-- PDF embeds and Obsidian note links resolve.
-- If the processed paper belongs to an active same-type topic corpus, the topic-family follow-up has either been executed or explicitly deferred.
+- Look at the image itself (`vision_analyze` on `raw/<P>/figures/files/<file>`) to see its layout and what it compares, and read it together with the paper's text that discusses it.
+- Numbers, labels and claims come from the paper's text and caption; image reading misreads small print.
+- Say what the reader would otherwise need to squint at the figure to get. Restating the caption is not an explanation.

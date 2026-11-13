@@ -1,8 +1,10 @@
 {
   "pdf_inbox": "~/Papers/inbox",
-  "reading_inbox": "~/Documents/Obsidian/ResearchVault/论文阅读",
-  "archive_root": "~/Documents/Obsidian/ResearchVault/论文笔记",
-  "staging_root": "~/Archives/paper-reading-workflow",
+  "reading_inbox": "~/Documents/Obsidian/ResearchVault/reading",
+  "archive_root": "~/Documents/Obsidian/ResearchVault/notes",
   "mineru_url": "http://127.0.0.1:8010",
-  "evidence_deep_read_validator": "~/.claude/skills/evidence-grounded-paper-deep-read/scripts/validate_report.py"
+  "extraction_backend": "datalab",
+  "datalab_api_key": "",
+  "appendix_policy": "auto",
+  "appendix_start_page": null
 }

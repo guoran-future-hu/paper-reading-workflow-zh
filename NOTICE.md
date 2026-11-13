@@ -6,13 +6,14 @@ The paper-reading process here was developed after studying:
 
 - [MoonKirito/evidence-grounded-paper-deep-read](https://github.com/MoonKirito/evidence-grounded-paper-deep-read), a public paper-reading Skill released under the MIT License.
 
-This repository then iterates that pattern for a local Chinese workflow around:
+This repository then iterates that pattern for a local workflow around:
 
-- evidence-grounded backend reports
-- MinerU PDF extraction
-- clean Chinese Obsidian notes
+- appendix preflight before paid extraction
+- Datalab PDF extraction (MinerU as an alternative backend)
+- post-extraction splitting into body, references, and appendix
+- clean English Obsidian notes
 - visual/table manifests
-- read markers and topic archives
+- one `raw/<paper-id>/` folder per paper, plus topic archives
 
 The workflow also depends conceptually and operationally on these projects:
 

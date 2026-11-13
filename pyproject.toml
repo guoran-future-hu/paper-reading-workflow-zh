@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "paper-reading-workflow-zh"
 version = "0.2.0"
-description = "A Chinese evidence-grounded paper reading workflow for PDFs, MinerU, and Obsidian notes."
+description = "An evidence-grounded paper reading workflow for PDFs, Datalab or MinerU, and English Obsidian notes."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Zhongyue Lin" }]
-dependencies = []
+dependencies = ["datalab-python-sdk"]
 
 [project.optional-dependencies]
 visual = ["Pillow>=10.0"]
@@ -19,8 +19,15 @@ dev = ["pytest>=8.0", "ruff>=0.4"]
 [project.scripts]
 paper-notes-download = "paper_notes.download:main"
 paper-notes-extract = "paper_notes.mineru_extract:main"
+paper-notes-extract-datalab = "paper_notes.datalab_extract:main"
 paper-notes-figures = "paper_notes.figure_manifest:main"
 paper-notes-validate = "paper_notes.validate_notes:main"
+paper-notes-init = "paper_notes.init_paper:main"
+paper-notes-extract-html = "paper_notes.html_extract:main"
+paper-notes-split = "paper_notes.split_text:main"
+paper-notes-select = "paper_notes.select_figures:main"
+paper-notes-scaffold = "paper_notes.scaffold_note:main"
+paper-notes-index = "paper_notes.reading_index:main"
 
 [tool.setuptools]
 packages = ["paper_notes"]
@@ -28,3 +35,10 @@ packages = ["paper_notes"]
 [tool.ruff]
 line-length = 120
 target-version = "py310"
+
+# Pin the lint surface. Leaving `select` unset means the rule set follows whatever
+# ruff version resolves at install time, so CI goes red on ruff releases that have
+# nothing to do with this code.
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+

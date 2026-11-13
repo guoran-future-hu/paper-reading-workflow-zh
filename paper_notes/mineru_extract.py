@@ -3,19 +3,16 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import re
 import shutil
 import subprocess
 from pathlib import Path
 
-from paper_notes.config import PaperNotesConfig
+from paper_notes.config import load_config
+from paper_notes.naming import disambiguate_paper_id, paper_id_from_pdf
 
 
 def slugify(name: str) -> str:
-    stem = Path(name).stem.lower()
-    stem = re.sub(r"[^a-z0-9]+", "-", stem)
-    stem = re.sub(r"-+", "-", stem).strip("-")
-    return stem or "paper"
+    return paper_id_from_pdf(Path(name))
 
 
 def sha256_file(path: Path) -> str:
@@ -57,6 +54,8 @@ def extract_content_list(result: dict) -> object | None:
 def extract_one(pdf: Path, paper_dir: Path, mineru_url: str, overwrite: bool) -> tuple[str, str]:
     mineru_dir = paper_dir / "mineru"
     mineru_dir.mkdir(parents=True, exist_ok=True)
+    (paper_dir / "text").mkdir(parents=True, exist_ok=True)
+    (paper_dir / "figures" / "files").mkdir(parents=True, exist_ok=True)
     shutil.copy2(pdf, paper_dir / "source.pdf")
 
     result_json = mineru_dir / "result.json"
@@ -119,7 +118,7 @@ def main() -> int:
     parser.add_argument("--overwrite", action="store_true", help="Re-extract even when full_text.md exists")
     args = parser.parse_args()
 
-    config = PaperNotesConfig.from_file(args.config)
+    config = load_config(args.config)
     pdf_dir = Path(args.pdf_dir).expanduser().resolve() if args.pdf_dir else config.pdf_inbox
     out_root = Path(args.out_root).expanduser().resolve() if args.out_root else config.inbox_evidence_root
     mineru_url = (args.mineru_url or config.mineru_url).rstrip("/")
@@ -132,15 +131,15 @@ def main() -> int:
     for index, pdf in enumerate(pdfs, start=1):
         digest = sha256_file(pdf)
         duplicate_of = seen_sha.get(digest)
-        slug = slugify(pdf.name)
+        slug = disambiguate_paper_id(slugify(pdf.name), pdf, out_root)
         paper_dir = out_root / slug
         paper_dir.mkdir(parents=True, exist_ok=True)
 
         meta = {
-            "source_pdf": str(pdf),
+            "source_pdf": f"raw/{slug}/source.pdf",
             "sha256": digest,
-            "duplicate_of": str(duplicate_of) if duplicate_of else None,
-            "mineru_url": mineru_url,
+            "paper_id": slug,
+            "extraction_backend": "mineru",
         }
         (paper_dir / "metadata.json").write_text(
             json.dumps(meta, ensure_ascii=False, indent=2) + "\n",
@@ -157,16 +156,6 @@ def main() -> int:
             print(f"  {status}: {notes}")
         batch_rows.append((pdf.name, slug, status, notes))
 
-    lines = [
-        "# MinerU Batch Index",
-        "",
-        "| PDF | Slug | Status | Notes |",
-        "|---|---|---|---|",
-    ]
-    for pdf_name, slug, status, notes in batch_rows:
-        safe_notes = str(notes).replace("|", "\\|").replace("\n", " ")
-        lines.append(f"| `{pdf_name}` | `{slug}` | {status} | {safe_notes} |")
-    (out_root / "batch_index.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return 0 if all(row[2] != "failed" for row in batch_rows) else 1
 
 

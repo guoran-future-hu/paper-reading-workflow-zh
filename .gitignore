@@ -7,6 +7,7 @@ build/
 *.egg-info/
 
 # Local paper data and generated workspaces
+evidence/
 inbox/
 workspace/
 vault/
@@ -18,3 +19,6 @@ archives/
 # Local/private configuration
 paper-notes.config.json
 .env
+
+# Editor state
+.obsidian/

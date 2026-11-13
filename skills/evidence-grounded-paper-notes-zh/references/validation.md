@@ -1,50 +1,21 @@
 # Validation Reference
 
-Run validation before saying the workflow is complete.
-
-## Backend Reports
-
-When `EVIDENCE_DEEP_READ_VALIDATOR` is configured:
-
 ```bash
-find "$PAPER_NOTES_ARCHIVE_ROOT" -path '*/_evidence_reports/*/report.md' | while read -r report; do
-  python "$EVIDENCE_DEEP_READ_VALIDATOR" "$report"
-done
+.venv/bin/paper-notes-validate
 ```
 
-All backend reports should pass.
-
-## Formal Notes
-
-Use the bundled validator:
-
-```bash
-python scripts/validate_clean_notes.py --config paper-notes.config.json
-```
+Validates every note in `<READING_INBOX>` against the `raw/` folder beside it. A failure line names the note and the rule; fix the note (or the manifest selection) and re-run until it prints `clean notes validation: ok`.
 
 It checks:
 
-- exactly 14 required second-level sections
-- no old machine/report traces
-- PDF embeds resolve
-- Obsidian note links resolve
-- figure embeds match `figure_manifest.json`
-- polished notes do not retain obsolete source-PDF body lines
-- no standalone single-dollar display math delimiters
+- a `## PDF Source` section, at least one body section, no empty section, and no `<!-- TODO` marker left — which sections exist is the `paper-summarizer` skill's call, not the validator's
+- no backend wording in prose: `full_text`, `MinerU`, `Evidence:`, `paper_index`, `report.md` and the like — describe the paper, not the pipeline
+- `paper_id`, `status`, `source_pdf` and the note filename are ASCII
+- the PDF embed and `source_pdf` resolve
+- `[[note]]` links point at existing notes
+- the note embeds exactly the manifest items that are `selected` and not `skip`
+- the note's `raw/<paper-id>/` holds `metadata.json` and `text/pruned.md`, `references.md`, `appendix.md`
+- the note has a row in `reading-index.md`
+- no standalone single-`$` display-math line
 
-## Read Markers
-
-Check source PDFs against read markers:
-
-```bash
-pdf_dir="${PAPER_NOTES_PDF_INBOX:-./inbox/pdfs}"
-comm -23 \
-  <(find "$pdf_dir" -maxdepth 1 -type f -iname '*.pdf' -exec basename {} \; | sort) \
-  <(find "$pdf_dir/已读标记" -maxdepth 1 -type f -name '*.已读.md' -exec basename {} .已读.md \; | sort)
-```
-
-No output means no current source PDF lacks a read marker.
-
-## Topic Archive Refresh
-
-After each batch is archived into `<ARCHIVE_ROOT>/<topic>/`, refresh topic inventories and family indexes with your local topic maintenance scripts. Keep those scripts outside this public repo if they contain private corpus paths or naming conventions.
+Tests: run `pytest`; never issue paid Datalab requests from a test.

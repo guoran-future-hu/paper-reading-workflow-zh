@@ -6,10 +6,11 @@ import json
 import re
 import subprocess
 import sys
+import unicodedata
 from pathlib import Path
 from urllib.parse import urlparse
 
-from paper_notes.config import PaperNotesConfig
+from paper_notes.config import load_config
 
 
 def arxiv_pdf_from_id(arxiv_id: str) -> str:
@@ -50,6 +51,11 @@ def run_json(cmd: list[str]) -> list[dict]:
         data = json.loads(proc.stdout)
     except json.JSONDecodeError as exc:
         raise RuntimeError(f"non-JSON output from {' '.join(cmd)}: {exc}") from exc
+    if isinstance(data, dict) and "ok" in data:  # opencli >= 2: {"ok": bool, "data": ..., "error": ...}
+        if not data.get("ok"):
+            error = data.get("error") or {}
+            raise RuntimeError(f"{' '.join(cmd)}: {error.get('code', '')} {error.get('message', '')}".strip())
+        data = data.get("data")
     if isinstance(data, dict):
         return [data]
     if isinstance(data, list):
@@ -87,7 +93,9 @@ def pdf_url_from_url(url: str) -> str:
 
 
 def sanitize_filename(value: str) -> str:
+    value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
     value = re.sub(r"[\\/:*?\"<>|]+", " ", value)
+    value = re.sub(r"[^A-Za-z0-9._ -]", " ", value)
     value = re.sub(r"\s+", " ", value).strip()
     return value[:180] or "paper"
 
@@ -218,17 +226,11 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Resolve only; do not download")
     args = parser.parse_args()
 
-    config = PaperNotesConfig.from_file(args.config)
+    config = load_config(args.config)
     out_dir = Path(args.out_dir).expanduser().resolve() if args.out_dir else config.pdf_inbox
     try:
-        pdf_url, title, meta = resolve(args.query, args.url, args.limit)
-        out = download(pdf_url, title, out_dir, args.dry_run)
-        if not args.dry_run:
-            meta_path = out.with_suffix(out.suffix + ".download.json")
-            meta_path.write_text(
-                json.dumps({"pdf_url": pdf_url, "title": title, "meta": meta}, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
+        pdf_url, title, _meta = resolve(args.query, args.url, args.limit)
+        download(pdf_url, title, out_dir, args.dry_run)
         return 0
     except Exception as exc:
         print(f"error: {exc}", file=sys.stderr)
