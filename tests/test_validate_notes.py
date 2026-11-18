@@ -213,3 +213,11 @@ def test_frontmatter_value_quoted_and_bare():
     assert frontmatter_value(text, "title") == "A Paper"
     assert frontmatter_value(text, "status") == "read"
     assert frontmatter_value(text, "missing") == ""
+
+
+def test_companion_notes_are_not_validated(tmp_path):
+    from paper_notes.validate_notes import note_files
+
+    for name in ("sample-2026.md", "sample-2026.critique.md", "reading-index.md"):
+        (tmp_path / name).write_text("x", encoding="utf-8")
+    assert [p.name for p in note_files(tmp_path, "reading-index.md")] == ["sample-2026.md"]

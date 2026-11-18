@@ -33,6 +33,7 @@ Run every command from the repo root as `.venv/bin/<command>`; `paper-notes.conf
 - English throughout. Display title/authors may be Unicode; filenames, paths, ids, YAML keys, tags and status stay ASCII.
 - Keep the frontmatter and `## PDF Source` as scaffolded.
 - Link other notes as `[[<paper-id>]]`, only notes that exist in `<READING_INBOX>`.
+- The user's own notes on a paper sit beside it as `<paper-id>.<kind>.md` (e.g. `.critique.md`). They are his: the pipeline never writes, rewrites or validates them.
 
 ## Figures
 

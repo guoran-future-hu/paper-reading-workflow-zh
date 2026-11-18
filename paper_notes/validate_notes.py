@@ -41,7 +41,8 @@ def validate_ascii_machine_fields(path: Path, text: str, errors: list[str]) -> N
 
 
 def note_files(notes_dir: Path, index_name: str) -> list[Path]:
-    return sorted(p for p in notes_dir.glob("*.md") if p.name != index_name)
+    """Paper notes only: `<paper-id>.md`. Companions such as `<paper-id>.critique.md` are the user's own."""
+    return sorted(p for p in notes_dir.glob("*.md") if p.name != index_name and "." not in p.stem)
 
 
 def validate_sections(path: Path, text: str, errors: list[str]) -> None:
